@@ -727,6 +727,9 @@ void CodeGenModule::SetLLVMFunctionAttributesForDefinition(const Decl *D,
     B.addAttribute(llvm::Attribute::StackProtectStrong);
   else if (LangOpts.getStackProtector() == LangOptions::SSPReq)
     B.addAttribute(llvm::Attribute::StackProtectReq);
+  else if (LangOpts.getStackProtector() == LangOptions::SSPSafeStack)
+    if (!D->hasAttr<NoSafeStackAttr>())
+      B.addAttribute(llvm::Attribute::SafeStack);
 
   // Add sanitizer attributes if function is not blacklisted.
   if (!SanitizerBL.isIn(*F)) {
@@ -3296,6 +3299,25 @@ void CodeGenFunction::EmitDeclMetadata() {
     } else if (auto *GV = dyn_cast<llvm::GlobalValue>(Addr)) {
       GlobalDecl GD = GlobalDecl(cast<VarDecl>(D));
       EmitGlobalDeclMetadata(CGM, GlobalMetadata, GD, GV);
+    }
+  }
+}
+
+void CodeGenFunction::EmitSafeStackMetadata()
+{
+  if (LocalDeclMap.empty()) return;
+
+  llvm::LLVMContext &Context = getLLVMContext();
+
+  for (auto &I : LocalDeclMap) {
+    const Decl *D = I.first;
+    llvm::Value *Addr = I.second;
+    if (auto *Alloca = dyn_cast<llvm::AllocaInst>(Addr)) {
+      if (D->getAttr<NoSafeStackAttr>()) {
+        llvm::MDNode* N = llvm::MDNode::get(
+          Context, llvm::MDString::get(Context, "no_safe_stack"));
+        Alloca->setMetadata("no_safe_stack", N);
+      }
     }
   }
 }

@@ -839,6 +839,10 @@ def fstack_protector_strong : Flag<["-"], "fstack-protector-strong">, Group<f_Gr
   HelpText<"Use a strong heuristic to apply stack protectors to functions">;
 def fstack_protector : Flag<["-"], "fstack-protector">, Group<f_Group>,
   HelpText<"Enable stack protectors for functions potentially vulnerable to stack smashing">;
+def fsafe_stack : Flag<["-"], "fsafe-stack">, Group<f_Group>,
+  HelpText<"Enable safe stack protection against stack-based memory corruption errors">;
+def fno_safe_stack : Flag<["-"], "fno-safe-stack">, Group<f_Group>,
+  HelpText<"Disable safe stack protection against stack-based memory corruption errors">;
 def fstandalone_debug : Flag<["-"], "fstandalone-debug">, Group<f_Group>, Flags<[CC1Option]>,
   HelpText<"Emit full debug info for all types used by the program">;
 def fno_standalone_debug : Flag<["-"], "fno-standalone-debug">, Group<f_Group>, Flags<[CC1Option]>,

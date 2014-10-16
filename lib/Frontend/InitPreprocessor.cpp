@@ -831,6 +831,8 @@ static void InitializePredefinedMacros(const TargetInfo &TI,
     Builder.defineMacro("__SSP_STRONG__", "2");
   else if (LangOpts.getStackProtector() == LangOptions::SSPReq)
     Builder.defineMacro("__SSP_ALL__", "3");
+  else if (LangOpts.getStackProtector() == LangOptions::SSPSafeStack)
+    Builder.defineMacro("__SAFESTACK__", "4");
 
   if (FEOpts.ProgramAction == frontend::RewriteObjC)
     Builder.defineMacro("__weak", "__attribute__((objc_gc(weak)))");

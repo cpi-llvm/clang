@@ -2085,6 +2085,41 @@ static void addProfileRT(
   CmdArgs.push_back(Args.MakeArgString(LibProfile));
 }
 
+static void addSafeStackRT(
+    const ToolChain &TC, const ArgList &Args, ArgStringList &CmdArgs) {
+  if (!Args.hasFlag(options::OPT_fsafe_stack,
+                    options::OPT_fno_safe_stack, false))
+    return;
+
+  {
+    const char *LibBaseName = "libclang_rt.safestack-";
+    SmallString<128> LibName = getCompilerRTLibDir(TC);
+    llvm::sys::path::append(LibName,
+      Twine(LibBaseName) + getArchNameForCompilerRTLib(TC) + ".a");
+
+    CmdArgs.push_back(Args.MakeArgString(LibName));
+  }
+
+  // Elf does not support pre-init array in DSO
+  if (!Args.hasArg(options::OPT_shared) && TC.getTriple().isOSBinFormatELF()) {
+    const char *LibBaseName = "libclang_rt.safestack_preinit-";
+    SmallString<128> LibName = getCompilerRTLibDir(TC);
+    llvm::sys::path::append(LibName,
+      Twine(LibBaseName) + getArchNameForCompilerRTLib(TC) + ".a");
+    CmdArgs.push_back(Args.MakeArgString(LibName));
+  }
+
+  // Safestack runtime requires dl on Linux
+  if (TC.getTriple().isOSLinux())
+    CmdArgs.push_back("-ldl");
+
+  // We need to ensure that the safe stack init function from the safestack
+  // runtime library is linked in, even though it might not be referenced by
+  // any code in the module before LTO optimizations are applied.
+  CmdArgs.push_back("-u");
+  CmdArgs.push_back("__safestack_init");
+}
+
 static SmallString<128> getSanitizerRTLibName(const ToolChain &TC,
                                               const StringRef Sanitizer,
                                               bool Shared) {
@@ -3598,7 +3633,14 @@ void Clang::ConstructJob(Compilation &C, const JobAction &JA,
 
   // -stack-protector=0 is default.
   unsigned StackProtectorLevel = 0;
-  if (Arg *A = Args.getLastArg(options::OPT_fno_stack_protector,
+  if (Args.hasFlag(options::OPT_fsafe_stack,
+                   options::OPT_fno_safe_stack, false)) {
+    StackProtectorLevel = LangOptions::SSPSafeStack;
+    Args.ClaimAllArgs(options::OPT_fno_stack_protector);
+    Args.ClaimAllArgs(options::OPT_fstack_protector_all);
+    Args.ClaimAllArgs(options::OPT_fstack_protector_strong);
+    Args.ClaimAllArgs(options::OPT_fstack_protector);
+  } else if (Arg *A = Args.getLastArg(options::OPT_fno_stack_protector,
                                options::OPT_fstack_protector_all,
                                options::OPT_fstack_protector_strong,
                                options::OPT_fstack_protector)) {
@@ -5736,6 +5778,21 @@ void darwin::Link::ConstructJob(Compilation &C, const JobAction &JA,
       !Args.hasArg(options::OPT_nostartfiles))
     getMachOToolChain().addStartObjectFileArgs(Args, CmdArgs);
 
+  // SafeStack requires its own runtime libraries
+  // These libraries should be linked first, to make sure the
+  // __safestack_init constructor executes before everything else
+  if (Args.hasFlag(options::OPT_fsafe_stack,
+                   options::OPT_fno_safe_stack, false)) {
+    getMachOToolChain().AddLinkRuntimeLib(Args, CmdArgs,
+                                          "libclang_rt.safestack_osx.a");
+
+    // We need to ensure that the safe stack init function from the safestack
+    // runtime library is linked in, even though it might not be referenced by
+    // any code in the module before LTO optimizations are applied.
+    CmdArgs.push_back("-u");
+    CmdArgs.push_back("___safestack_init");
+  }
+
   Args.AddAllArgs(CmdArgs, options::OPT_L);
 
   LibOpenMP UsedOpenMPLib = LibUnknown;
@@ -5965,6 +6022,8 @@ void solaris::Link::ConstructJob(Compilation &C, const JobAction &JA,
   }
 
   CmdArgs.push_back(Args.MakeArgString("-L" + GCCLibPath));
+
+  addSafeStackRT(getToolChain(), Args, CmdArgs);
 
   Args.AddAllArgs(CmdArgs, options::OPT_L);
   Args.AddAllArgs(CmdArgs, options::OPT_T_Group);
@@ -6620,6 +6679,8 @@ void freebsd::Link::ConstructJob(Compilation &C, const JobAction &JA,
     CmdArgs.push_back(Args.MakeArgString(ToolChain.GetFilePath(crtbegin)));
   }
 
+  //addSafeStackRT(getToolChain(), Args, CmdArgs);
+
   Args.AddAllArgs(CmdArgs, options::OPT_L);
   const ToolChain::path_list Paths = ToolChain.getFilePaths();
   for (const auto &Path : Paths)
@@ -6887,6 +6948,8 @@ void netbsd::Link::ConstructJob(Compilation &C, const JobAction &JA,
                               getToolChain().GetFilePath("crtbeginS.o")));
     }
   }
+
+  addSafeStackRT(getToolChain(), Args, CmdArgs);
 
   Args.AddAllArgs(CmdArgs, options::OPT_L);
   Args.AddAllArgs(CmdArgs, options::OPT_T_Group);
@@ -7402,6 +7465,8 @@ void gnutools::Link::ConstructJob(Compilation &C, const JobAction &JA,
     ToolChain.AddFastMathRuntimeIfAvailable(Args, CmdArgs);
   }
 
+  addSafeStackRT(getToolChain(), Args, CmdArgs);
+
   Args.AddAllArgs(CmdArgs, options::OPT_L);
   Args.AddAllArgs(CmdArgs, options::OPT_u);
 
@@ -7541,6 +7606,8 @@ void minix::Link::ConstructJob(Compilation &C, const JobAction &JA,
       CmdArgs.push_back(Args.MakeArgString(getToolChain().GetFilePath("crtn.o")));
   }
 
+  addSafeStackRT(getToolChain(), Args, CmdArgs);
+
   Args.AddAllArgs(CmdArgs, options::OPT_L);
   Args.AddAllArgs(CmdArgs, options::OPT_T_Group);
   Args.AddAllArgs(CmdArgs, options::OPT_e);
@@ -7668,6 +7735,8 @@ void dragonfly::Link::ConstructJob(Compilation &C, const JobAction &JA,
       CmdArgs.push_back(Args.MakeArgString(
                               getToolChain().GetFilePath("crtbegin.o")));
   }
+
+  addSafeStackRT(getToolChain(), Args, CmdArgs);
 
   Args.AddAllArgs(CmdArgs, options::OPT_L);
   Args.AddAllArgs(CmdArgs, options::OPT_T_Group);

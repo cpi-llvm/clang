@@ -1274,6 +1274,13 @@ def X86ForceAlignArgPointer : InheritableAttr, TargetSpecificAttr<TargetX86> {
   let Documentation = [Undocumented];
 }
 
+// Attribute to disable SafeStack (or equivalent) instrumentation.
+def NoSafeStack : InheritableAttr {
+  let Spellings = [GCC<"no_safe_stack">];
+  let Subjects = SubjectList<[Var, Function], ErrorDiag>;
+  let Documentation = [NoSafeStackDocs];
+}
+
 // Attribute to disable AddressSanitizer (or equivalent) checks.
 def NoSanitizeAddress : InheritableAttr {
   let Spellings = [GCC<"no_address_safety_analysis">,

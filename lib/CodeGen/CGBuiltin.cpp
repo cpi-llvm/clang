@@ -1587,6 +1587,14 @@ RValue CodeGenFunction::EmitBuiltinExpr(const FunctionDecl *FD,
     RMWI->setVolatile(true);
     return RValue::get(RMWI);
   }
+  case Builtin::BI__builtin_safestack_set_usp: {
+    Value *I = CGM.getIntrinsic(Intrinsic::safestack_set_usp);
+    return RValue::get(Builder.CreateCall(I, EmitScalarExpr(E->getArg(0))));
+  }
+  case Builtin::BI__builtin_safestack_get_usp: {
+    Value *I = CGM.getIntrinsic(Intrinsic::safestack_get_usp);
+    return RValue::get(Builder.CreateCall(I));
+  }
   }
 
   // If this is an alias for a lib function (e.g. __builtin_sin), emit

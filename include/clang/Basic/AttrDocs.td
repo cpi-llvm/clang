@@ -731,6 +731,17 @@ This attribute accepts a single parameter that must be one of the following:
   }];
 }
 
+def NoSafeStackDocs : Documentation {
+  let Category = DocCatFunction;
+  let Content = [{
+Use ``__attribute__((no_safe_stack))`` on a function or variable declaration
+to specify that the safe stack instrumentation should not be applied to it,
+even if enabled globally (see -fsafe-stack flag). This attribute may be
+required for functions that make assumptions about the exact layout of their
+stack frames.
+  }];
+}
+
 def NoSanitizeAddressDocs : Documentation {
   let Category = DocCatFunction;
   // This function has multiple distinct spellings, and so it requires a custom

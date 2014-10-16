@@ -4439,6 +4439,9 @@ static void ProcessDeclAttribute(Sema &S, Scope *scope, Decl *D,
   case AttributeList::AT_ScopedLockable:
     handleSimpleAttribute<ScopedLockableAttr>(S, D, Attr);
     break;
+  case AttributeList::AT_NoSafeStack:
+    handleSimpleAttribute<NoSafeStackAttr>(S, D, Attr);
+    break;
   case AttributeList::AT_NoSanitizeAddress:
     handleSimpleAttribute<NoSanitizeAddressAttr>(S, D, Attr);
     break;

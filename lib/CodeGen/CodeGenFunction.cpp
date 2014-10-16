@@ -282,6 +282,9 @@ void CodeGenFunction::FinishFunction(SourceLocation EndLoc) {
   if (CGM.getCodeGenOpts().EmitDeclMetadata)
     EmitDeclMetadata();
 
+  if (CGM.getLangOpts().getStackProtector() == LangOptions::SSPSafeStack)
+    EmitSafeStackMetadata();
+
   for (SmallVectorImpl<std::pair<llvm::Instruction *, llvm::Value *> >::iterator
            I = DeferredReplacements.begin(),
            E = DeferredReplacements.end();
