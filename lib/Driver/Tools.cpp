@@ -2185,8 +2185,9 @@ static void addSafeStackRT(
 
   CmdArgs.push_back(Args.MakeArgString(LibName));
 
-  // On gnu platforms, safestack runtime requires dl
-  CmdArgs.push_back("-ldl");
+  // Safestack runtime requires dl on Linux
+  if (TC.getTriple().isOSLinux())
+    CmdArgs.push_back("-ldl");
 
   // We need to ensure that the safe stack init function from the safestack
   // runtime library is linked in, even though it might not be referenced by
