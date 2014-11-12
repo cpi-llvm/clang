@@ -20,7 +20,8 @@ control-flow hijack protection technique in our OSDI paper on
 code-pointer integrity (http://dslab.epfl.ch/pubs/cpi.pdf) and our
 project website (http://levee.epfl.ch).
 
-Typical slowdown introduced by SafeStack is **1.05x**.
+SafeStack typically does not introduce any measurable performance
+overhead.
 
 How to build
 ============
