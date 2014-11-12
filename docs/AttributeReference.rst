@@ -483,6 +483,19 @@ specify that checks for data races on plain (non-atomic) memory accesses should
 not be inserted by ThreadSanitizer. The function is still instrumented by the
 tool to avoid false positives and provide meaningful stack traces.
 
+no_safe_stack
+-------------
+
+.. csv-table:: Supported Syntaxes
+   :header: "GNU", "C++11", "__declspec", "Keyword"
+
+   "X","","",""
+
+.. _langext-safe_stack:
+
+Use ``__attribute__((no_safe_stack))`` on a function declaration to
+specify that this function's stack should not be instrumented by SafeStack.
+
 
 no_split_stack (gnu::no_split_stack)
 ------------------------------------
