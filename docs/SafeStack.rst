@@ -20,7 +20,7 @@ control-flow hijack protection technique in our OSDI paper on
 code-pointer integrity (http://dslab.epfl.ch/pubs/cpi.pdf) and our
 project website (http://levee.epfl.ch).
 
-Typical slowdown introduced by MemorySanitizer is **1.05x**.
+Typical slowdown introduced by SafeStack is **1.05x**.
 
 How to build
 ============
@@ -36,32 +36,27 @@ The SafeStack run-time library should be linked to the final
 executable, so make sure to use ``clang`` (not ``ld``) for the final
 link step.
 
-``__has_feature(safe_stack)``
------------------------------
+``__SAFESTACK__``
+-----------------
 
 In some cases one may need to execute different code depending on
-whether SafeStack is enabled. :ref:`\_\_has\_feature
-<langext-__has_feature-__has_extension>` can be used for this purpose.
+whether SafeStack is enabled. The define ``__SAFESTACK__`` can be
+used for this purpose.
 
 .. code-block:: c
 
-    #if defined(__has_feature)
-    #  if __has_feature(safe_stack)
+    #ifdef __SAFESTACK__
     // code that builds only under SafeStack
-    #  endif
     #endif
 
 ``__attribute__((no_safe_stack))``
 ----------------------------------
 
-Some code should not be instrumented by SafeStack.
-One may use the function attribute
-:ref:`no_safe_stack <langext-safe_stack>`
-to disable SafeStack instrumentation in a particular function.
-SafeStack may still instrument such functions to avoid false positives.
-This attribute may not be
-supported by other compilers, so we suggest to use it together with
-``__has_feature(safe_stack)``.
+Use ``__attribute__((no_safe_stack))`` on a function declaration to specify
+that the safe stack instrumentation should not be applied to that function,
+even if enabled globally (see -fsafe-stack flag). This attribute may be
+required for functions that make assumptions about the exact layout of their
+stack frames.
 
 Supported Platforms
 ===================
