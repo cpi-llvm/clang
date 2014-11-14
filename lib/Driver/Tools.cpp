@@ -2193,7 +2193,7 @@ static void addSafeStackRT(
   // runtime library is linked in, even though it might not be referenced by
   // any code in the module before LTO optimizations are applied.
   CmdArgs.push_back("-u");
-  CmdArgs.push_back("__llvm__safestack_init");
+  CmdArgs.push_back("__safestack_init");
 }
 
 static SmallString<128> getSanitizerRTLibName(const ToolChain &TC,
@@ -5876,7 +5876,7 @@ void darwin::Link::ConstructJob(Compilation &C, const JobAction &JA,
 
   // SafeStack requires its own runtime libraries
   // These libraries should be linked first, to make sure the
-  // __llvm__safestack_init constructor executes before everything else
+  // __safestack_init constructor executes before everything else
   if (Args.hasFlag(options::OPT_fsafe_stack,
                    options::OPT_fno_safe_stack, false)) {
     getMachOToolChain().AddLinkRuntimeLib(Args, CmdArgs,
@@ -5886,7 +5886,7 @@ void darwin::Link::ConstructJob(Compilation &C, const JobAction &JA,
     // runtime library is linked in, even though it might not be referenced by
     // any code in the module before LTO optimizations are applied.
     CmdArgs.push_back("-u");
-    CmdArgs.push_back("___llvm__safestack_init");
+    CmdArgs.push_back("__safestack_init");
   }
 
   Args.AddAllArgs(CmdArgs, options::OPT_L);
