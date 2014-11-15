@@ -5886,7 +5886,7 @@ void darwin::Link::ConstructJob(Compilation &C, const JobAction &JA,
     // runtime library is linked in, even though it might not be referenced by
     // any code in the module before LTO optimizations are applied.
     CmdArgs.push_back("-u");
-    CmdArgs.push_back("__safestack_init");
+    CmdArgs.push_back("___safestack_init");
   }
 
   Args.AddAllArgs(CmdArgs, options::OPT_L);
