@@ -138,6 +138,8 @@ def dwarf_debug_flags : Separate<["-"], "dwarf-debug-flags">,
   HelpText<"The string to embed in the Dwarf debug flags record.">;
 def mno_exec_stack : Flag<["-"], "mnoexecstack">,
   HelpText<"Mark the file as not needing an executable stack">;
+def msafestack : Flag<["-"], "msafestack">,
+  HelpText<"Mark the file as requiring SafeStack">;
 def massembler_fatal_warnings : Flag<["-"], "massembler-fatal-warnings">,
   HelpText<"Make assembler warnings fatal">;
 def compress_debug_sections : Flag<["-"], "compress-debug-sections">,
