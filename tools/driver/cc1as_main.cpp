@@ -124,7 +124,6 @@ struct AssemblerInvocation {
   unsigned RelaxAll : 1;
   unsigned NoExecStack : 1;
   unsigned FatalWarnings : 1;
-  unsigned SafeStack : 1;
 
   /// @}
 
@@ -250,7 +249,6 @@ bool AssemblerInvocation::CreateFromArgs(AssemblerInvocation &Opts,
   // Assemble Options
   Opts.RelaxAll = Args->hasArg(OPT_mrelax_all);
   Opts.NoExecStack = Args->hasArg(OPT_mno_exec_stack);
-  Opts.SafeStack = Args->hasArg(OPT_msafestack);
   Opts.FatalWarnings =  Args->hasArg(OPT_massembler_fatal_warnings);
 
   return Success;
@@ -385,9 +383,6 @@ static bool ExecuteAssembler(AssemblerInvocation &Opts,
                                                 CE, *STI, Opts.RelaxAll));
     Str.get()->InitSections(Opts.NoExecStack);
   }
-
-  if (Opts.SafeStack)
-    Str.get()->EmitSafeStackNote();
 
   bool Failed = false;
 
