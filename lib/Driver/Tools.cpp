@@ -6686,7 +6686,7 @@ void freebsd::Link::ConstructJob(Compilation &C, const JobAction &JA,
     CmdArgs.push_back(Args.MakeArgString(ToolChain.GetFilePath(crtbegin)));
   }
 
-  addSafeStackRT(getToolChain(), Args, CmdArgs);
+  //addSafeStackRT(getToolChain(), Args, CmdArgs);
 
   Args.AddAllArgs(CmdArgs, options::OPT_L);
   const ToolChain::path_list &Paths = ToolChain.getFilePaths();
