@@ -2788,6 +2788,7 @@ private:
   }
 
   void EmitDeclMetadata();
+  void EmitSafeStackMetadata();
 
   CodeGenModule::ByrefHelpers *
   buildByrefHelpers(llvm::StructType &byrefType,
