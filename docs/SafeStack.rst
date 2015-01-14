@@ -53,8 +53,8 @@ used for this purpose.
 ``__attribute__((no_safe_stack))``
 ----------------------------------
 
-Use ``__attribute__((no_safe_stack))`` on a function declaration to specify
-that the safe stack instrumentation should not be applied to that function,
+Use ``__attribute__((no_safe_stack))`` on a function or variable declaration
+to specify that the safe stack instrumentation should not be applied to it,
 even if enabled globally (see -fsafe-stack flag). This attribute may be
 required for functions that make assumptions about the exact layout of their
 stack frames.
@@ -72,7 +72,7 @@ Current Status
 ==============
 
 SafeStack is an experimental tool. It is known to work on large
-real-world programs, like the FreeBSD packages, chromium, ...
+real-world programs, many FreeBSD packages, chromium, ...
 
 More Information
 ================

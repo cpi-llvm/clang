@@ -493,8 +493,8 @@ no_safe_stack
 
 .. _langext-safe_stack:
 
-Use ``__attribute__((no_safe_stack))`` on a function declaration to specify
-that the safe stack instrumentation should not be applied to that function,
+Use ``__attribute__((no_safe_stack))`` on a function or variable declaration
+to specify that the safe stack instrumentation should not be applied to it,
 even if enabled globally (see -fsafe-stack flag). This attribute may be
 required for functions that make assumptions about the exact layout of their
 stack frames.

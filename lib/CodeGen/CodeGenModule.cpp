@@ -3412,6 +3412,11 @@ void CodeGenFunction::EmitDeclMetadata() {
     if (auto *Alloca = dyn_cast<llvm::AllocaInst>(Addr)) {
       llvm::Value *DAddr = GetPointerConstant(getLLVMContext(), D);
       Alloca->setMetadata(DeclPtrKind, llvm::MDNode::get(Context, DAddr));
+      if (D->getAttr<NoSafeStackAttr>()) {
+        llvm::MDNode* N = llvm::MDNode::get(
+          Context, llvm::MDString::get(Context, "no_safe_stack"));
+        Alloca->setMetadata("no_safe_stack", N);
+      }
     } else if (auto *GV = dyn_cast<llvm::GlobalValue>(Addr)) {
       GlobalDecl GD = GlobalDecl(cast<VarDecl>(D));
       EmitGlobalDeclMetadata(CGM, GlobalMetadata, GD, GV);
