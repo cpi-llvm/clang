@@ -1632,6 +1632,14 @@ RValue CodeGenFunction::EmitBuiltinExpr(const FunctionDecl *FD,
         Builder.CreateAlignedLoad(IntToPtr, /*Align=*/4, /*isVolatile=*/true);
     return RValue::get(Load);
   }
+  case Builtin::BI__builtin_safestack_set_sp: {
+    Value *I = CGM.getIntrinsic(Intrinsic::safestack_set_sp);
+    return RValue::get(Builder.CreateCall(I, EmitScalarExpr(E->getArg(0))));
+  }
+  case Builtin::BI__builtin_safestack_get_sp: {
+    Value *I = CGM.getIntrinsic(Intrinsic::safestack_get_sp);
+    return RValue::get(Builder.CreateCall(I));
+  }
   }
 
   // If this is an alias for a lib function (e.g. __builtin_sin), emit

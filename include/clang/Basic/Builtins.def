@@ -1228,6 +1228,10 @@ BUILTIN(__builtin_addressof, "v*v&", "nct")
 BUILTIN(__builtin_operator_new, "v*z", "c")
 BUILTIN(__builtin_operator_delete, "vv*", "n")
 
+// Safestack builtins
+BUILTIN(__builtin_safestack_get_sp, "vv*", "n")
+BUILTIN(__builtin_safestack_set_sp, "v*v", "n")
+
 #undef BUILTIN
 #undef LIBBUILTIN
 #undef LANGBUILTIN
