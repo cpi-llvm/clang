@@ -1229,8 +1229,8 @@ BUILTIN(__builtin_operator_new, "v*z", "c")
 BUILTIN(__builtin_operator_delete, "vv*", "n")
 
 // Safestack builtins
-BUILTIN(__builtin_safestack_get_usp, "vv*", "n")
-BUILTIN(__builtin_safestack_set_usp, "v*v", "n")
+BUILTIN(__builtin_safestack_get_usp, "v*", "n")
+BUILTIN(__builtin_safestack_set_usp, "vv*", "n")
 
 #undef BUILTIN
 #undef LIBBUILTIN
