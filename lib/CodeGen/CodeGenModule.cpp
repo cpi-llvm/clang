@@ -744,6 +744,9 @@ void CodeGenModule::SetLLVMFunctionAttributesForDefinition(const Decl *D,
     B.addAttribute(llvm::Attribute::StackProtectStrong);
   else if (LangOpts.getStackProtector() == LangOptions::SSPReq)
     B.addAttribute(llvm::Attribute::StackProtectReq);
+  else if (LangOpts.getStackProtector() == LangOptions::SSPSafeStack)
+    if (!D->hasAttr<NoSafeStackAttr>())
+      B.addAttribute(llvm::Attribute::SafeStack);
 
   // Add sanitizer attributes if function is not blacklisted.
   if (!isInSanitizerBlacklist(F, D->getLocation())) {

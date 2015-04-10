@@ -1656,6 +1656,7 @@ static void ParseLangArgs(LangOptions &Opts, ArgList &Args, InputKind IK,
   case 1: Opts.setStackProtector(LangOptions::SSPOn);  break;
   case 2: Opts.setStackProtector(LangOptions::SSPStrong); break;
   case 3: Opts.setStackProtector(LangOptions::SSPReq); break;
+  case 4: Opts.setStackProtector(LangOptions::SSPSafeStack); break;
   }
 
   // Parse -fsanitize= arguments.

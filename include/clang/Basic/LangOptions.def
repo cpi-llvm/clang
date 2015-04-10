@@ -197,7 +197,7 @@ ENUM_LANGOPT(ValueVisibilityMode, Visibility, 3, DefaultVisibility,
              "value symbol visibility")
 ENUM_LANGOPT(TypeVisibilityMode, Visibility, 3, DefaultVisibility,
              "type symbol visibility")
-ENUM_LANGOPT(StackProtector, StackProtectorMode, 2, SSPOff,
+ENUM_LANGOPT(StackProtector, StackProtectorMode, 3, SSPOff,
              "stack protector mode")
 ENUM_LANGOPT(SignedOverflowBehavior, SignedOverflowBehaviorTy, 2, SOB_Undefined,
              "signed integer overflow handling")
