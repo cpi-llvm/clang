@@ -2234,25 +2234,6 @@ static void addProfileRT(const ToolChain &TC, const ArgList &Args,
   CmdArgs.push_back(Args.MakeArgString(getCompilerRT(TC, "profile")));
 }
 
-static void addSafeStackRT(
-    const ToolChain &TC, const ArgList &Args, ArgStringList &CmdArgs) {
-  if (!Args.hasFlag(options::OPT_fsafe_stack,
-                    options::OPT_fno_safe_stack, false))
-    return;
-
-  CmdArgs.push_back(Args.MakeArgString(getCompilerRT(TC, "safestack")));
-
-  // Safestack runtime requires dl on Linux
-  if (TC.getTriple().isOSLinux())
-    CmdArgs.push_back("-ldl");
-
-  // We need to ensure that the safe stack init function from the safestack
-  // runtime library is linked in, even though it might not be referenced by
-  // any code in the module before LTO optimizations are applied.
-  CmdArgs.push_back("-u");
-  CmdArgs.push_back("__safestack_init");
-}
-
 static void addSanitizerRuntime(const ToolChain &TC, const ArgList &Args,
                                 ArgStringList &CmdArgs, StringRef Sanitizer,
                                 bool IsShared) {
@@ -2263,6 +2244,19 @@ static void addSanitizerRuntime(const ToolChain &TC, const ArgList &Args,
   CmdArgs.push_back(Args.MakeArgString(getCompilerRT(TC, Sanitizer, IsShared)));
   if (!IsShared)
     CmdArgs.push_back("-no-whole-archive");
+}
+
+static void addSafeStackRT(
+    const ToolChain &TC, const ArgList &Args, ArgStringList &CmdArgs) {
+  if (!Args.hasFlag(options::OPT_fsafe_stack,
+                    options::OPT_fno_safe_stack, false))
+    return;
+
+  addSanitizerRuntime(TC, Args, CmdArgs, "safestack", false);
+
+  // Safestack runtime requires dl on Linux
+  if (TC.getTriple().isOSLinux())
+    CmdArgs.push_back("-ldl");
 }
 
 // Tries to use a file with the list of dynamic symbols that need to be exported
