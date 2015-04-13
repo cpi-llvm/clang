@@ -2187,15 +2187,6 @@ static void addSafeStackRT(
     CmdArgs.push_back(Args.MakeArgString(LibName));
   }
 
-  // Elf does not support pre-init array in DSO
-  if (!Args.hasArg(options::OPT_shared) && TC.getTriple().isOSBinFormatELF()) {
-    const char *LibBaseName = "libclang_rt.safestack_preinit-";
-    SmallString<128> LibName = getCompilerRTLibDir(TC);
-    llvm::sys::path::append(LibName,
-      Twine(LibBaseName) + getArchNameForCompilerRTLib(TC) + ".a");
-    CmdArgs.push_back(Args.MakeArgString(LibName));
-  }
-
   // Safestack runtime requires dl on Linux
   if (TC.getTriple().isOSLinux())
     CmdArgs.push_back("-ldl");
@@ -2205,6 +2196,19 @@ static void addSafeStackRT(
   // any code in the module before LTO optimizations are applied.
   CmdArgs.push_back("-u");
   CmdArgs.push_back("__safestack_init");
+
+  // Elf .preinit_array allows to run safestack initialization before any other
+  // constructors. However, it is not supported in DSO, so we link accordingly.
+  if (!Args.hasArg(options::OPT_shared) && TC.getTriple().isOSBinFormatELF()) {
+    const char *LibBaseName = "libclang_rt.safestack_preinit-";
+    SmallString<128> LibName = getCompilerRTLibDir(TC);
+    llvm::sys::path::append(LibName,
+      Twine(LibBaseName) + getArchNameForCompilerRTLib(TC) + ".a");
+    CmdArgs.push_back(Args.MakeArgString(LibName));
+
+    CmdArgs.push_back("-u");
+    CmdArgs.push_back("__safestack_preinit");
+  }
 }
 
 static SmallString<128> getSanitizerRTLibName(const ToolChain &TC,
