@@ -3429,7 +3429,20 @@ void CodeGenFunction::EmitSafeStackMetadata()
     const Decl *D = I.first;
     llvm::Value *Addr = I.second;
     if (auto *Alloca = dyn_cast<llvm::AllocaInst>(Addr)) {
+      bool NoSafeStack = false;
       if (D->getAttr<NoSafeStackAttr>()) {
+        NoSafeStack = true;
+      } else if (const ValueDecl *VD = dyn_cast<ValueDecl>(D)) {
+        const Type *T = VD->getType().getTypePtr();
+        if ((isa<TypedefType>(T) &&
+             cast<TypedefType>(T)->getDecl()->getAttr<NoSafeStackAttr>()) ||
+            (isa<RecordType>(T) &&
+             cast<RecordType>(T)->getDecl()->getAttr<NoSafeStackAttr>())) {
+          NoSafeStack = true;
+        }
+      }
+
+      if (NoSafeStack) {
         llvm::MDNode* N = llvm::MDNode::get(
           Context, llvm::MDString::get(Context, "no_safe_stack"));
         Alloca->setMetadata("no_safe_stack", N);
