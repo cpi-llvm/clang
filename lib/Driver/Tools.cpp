@@ -2257,6 +2257,10 @@ static void addSafeStackRT(
   // Safestack runtime requires dl on Linux
   if (TC.getTriple().isOSLinux())
     CmdArgs.push_back("-ldl");
+
+  if (!Args.hasArg(options::OPT_shared) && TC.getTriple().isOSBinFormatELF()) {
+    addSanitizerRuntime(TC, Args, CmdArgs, "safestack_preinit", false);
+  }
 }
 
 // Tries to use a file with the list of dynamic symbols that need to be exported
