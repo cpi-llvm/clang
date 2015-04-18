@@ -493,11 +493,12 @@ no_safe_stack
 
 .. _langext-safe_stack:
 
-Use ``__attribute__((no_safe_stack))`` on a function declaration to specify
-that the safe stack instrumentation should not be applied to that function,
-even if enabled globally (see -fsafe-stack flag). This attribute may be
-required for functions that make assumptions about the exact layout of their
-stack frames.
+Use ``__attribute__((no_safe_stack))`` on a function, variable or class
+declaration to specify that the safe stack instrumentation should not be
+applied to that declaration, even if enabled globally (see -fsafe-stack flag).
+This attribute may be required for functions that make assumptions about the
+exact layout of their stack frames, or variables or classes used as stack
+location markers.
 
 no_split_stack (gnu::no_split_stack)
 ------------------------------------

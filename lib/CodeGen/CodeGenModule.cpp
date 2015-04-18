@@ -3569,6 +3569,37 @@ void CodeGenFunction::EmitDeclMetadata() {
   }
 }
 
+/// Emits metadata nodes for the no_safe_stack local variables.
+void CodeGenFunction::EmitSafeStackMetadata() {
+  if (LocalDeclMap.empty()) return;
+
+  llvm::LLVMContext &Context = getLLVMContext();
+  llvm::MDNode *NoSafeStackMD = nullptr;
+
+  for (auto &I : LocalDeclMap) {
+    const Decl *D = I.first;
+    llvm::Value *Addr = I.second;
+    if (auto *Alloca = dyn_cast_or_null<llvm::AllocaInst>(Addr)) {
+      bool NoSafeStack = false;
+      if (D->getAttr<NoSafeStackAttr>()) {
+        NoSafeStack = true;
+      } else if (const ValueDecl *VD = dyn_cast<ValueDecl>(D)) {
+        const RecordType *RT = dyn_cast<RecordType>(VD->getType().getTypePtr());
+        if (RT && RT->getDecl()->getAttr<NoSafeStackAttr>())
+          NoSafeStack = true;
+      }
+
+      if (NoSafeStack) {
+        if (!NoSafeStackMD) {
+          NoSafeStackMD = llvm::MDNode::get(
+            Context, llvm::MDString::get(Context, "no_safe_stack"));
+        }
+        Alloca->setMetadata("no_safe_stack", NoSafeStackMD);
+      }
+    }
+  }
+}
+
 void CodeGenModule::EmitVersionIdentMetadata() {
   llvm::NamedMDNode *IdentMetadata =
     TheModule.getOrInsertNamedMetadata("llvm.ident");
