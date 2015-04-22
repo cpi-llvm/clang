@@ -14,20 +14,24 @@ void nosp_fun_args() __attribute__((no_safe_stack(1))); // \
 int nosp_testfn(int y) NO_SAFE_STACK;
 
 int nosp_testfn(int y) {
-  int x NO_SAFE_STACK = y;
+  int x NO_SAFE_STACK = y; // \
+    // expected-error {{'no_safe_stack' attribute only applies to functions}}
   return x;
 }
 
-int nosp_test_var NO_SAFE_STACK;
+int nosp_test_var NO_SAFE_STACK; // \
+  // expected-error {{'no_safe_stack' attribute only applies to functions}}
 
 class NoSPFoo {
  private:
   int test_field NO_SAFE_STACK; // \
-    // expected-error {{'no_safe_stack' attribute only applies to variables, functions and classes}}
+    // expected-error {{'no_safe_stack' attribute only applies to functions}}
   void test_method() NO_SAFE_STACK;
 };
 
-class NO_SAFE_STACK NoSPTestClass {
+class NO_SAFE_STACK NoSPTestClass { // \
+  // expected-error {{'no_safe_stack' attribute only applies to functions}}
 };
 
-void nosp_fun_params(int lvar NO_SAFE_STACK);
+void nosp_fun_params(int lvar NO_SAFE_STACK); // \
+  // expected-error {{'no_safe_stack' attribute only applies to functions}}

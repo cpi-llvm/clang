@@ -1384,7 +1384,7 @@ def X86ForceAlignArgPointer : InheritableAttr, TargetSpecificAttr<TargetX86> {
 // Attribute to disable SafeStack (or equivalent) instrumentation.
 def NoSafeStack : InheritableAttr {
   let Spellings = [GCC<"no_safe_stack">];
-  let Subjects = SubjectList<[Var, Function, CXXRecord], ErrorDiag>;
+  let Subjects = SubjectList<[Function], ErrorDiag>;
   let Documentation = [NoSafeStackDocs];
 }
 
