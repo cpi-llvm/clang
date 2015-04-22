@@ -21,10 +21,12 @@ Performance
 -----------
 
 The performance overhead of the SafeStack instrumentation is less than 0.1% on
-average on SPEC 2006 benchmarks. Most small functions do not have any variables
-that require the unsafe stack and, hence, do not need unsafe stack frames to be
-created. The cost of creating unsafe stack frames for large functions is
-amortized by the cost of executing the function.
+average across a variety of benchmarks (see the `Code-Pointer Integrity
+<http://dslab.epfl.ch/pubs/cpi.pdf>`_ paper for details). This is mainly
+because most small functions do not have any variables that require the unsafe
+stack and, hence, do not need unsafe stack frames to be created. The cost of
+creating unsafe stack frames for large functions is amortized by the cost of
+executing the function.
 
 In some cases, SafeStack actually improves the performance. Objects that end up
 being moved to the unsafe stack are usually large arrays or variables that are
