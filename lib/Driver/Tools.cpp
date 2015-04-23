@@ -2252,6 +2252,12 @@ static void addSafeStackRT(
                     options::OPT_fno_safe_stack, false))
     return;
 
+  if (Args.hasArg(options::OPT_shared)) {
+    // This is a temporary limitation caused by linking issues.
+    TC.getDriver().Diag(diag::err_drv_argument_not_allowed_with)
+      << "-fsafe-stack" << "-shared";
+  }
+
   addSanitizerRuntime(TC, Args, CmdArgs, "safestack", false);
 
   // Safestack runtime requires dl on Linux
