@@ -15,7 +15,10 @@ the safe stack and the unsafe stack. The safe stack stores return addresses,
 register spills, and local variables that are always accessed in a safe way,
 while the unsafe stack stores everything else. This separation ensures that
 buffer overflows on the unsafe stack cannot be used to overwrite anything
-on the safe stack, which includes return addresses.
+on the safe stack.
+
+SafeStack is a part of the `Code-Pointer Integrity (CPI) Project
+<http://dslab.epfl.ch/proj/cpi/>`_.
 
 Performance
 -----------
@@ -33,37 +36,6 @@ being moved to the unsafe stack are usually large arrays or variables that are
 used through multiple stack frames. Moving such objects away from the safe
 stack increases the locality of frequently accessed values on the stack, such
 as register spills, return addresses, and small local variables.
-
-Limitations
------------
-
-SafeStack has not been subjected to a comprehensive security review, and there
-exist known weaknesses, including but not limited to the following.
-
-In its current state, the separation of local variables provides protection
-against stack buffer overflows, but the safe stack itself is not protected
-from being corrupted through a pointer dereference. The Code-Pointer
-Integrity paper describes two ways in which we may protect the safe stack:
-hardware segmentation on the 32-bit x86 architecture or information hiding
-on other architectures.
-
-Even with information hiding, the safe stack would merely be hidden
-from attackers by being somewhere in the address space. Depending on the
-application, the address could be predictable even on 64-bit address spaces
-because not all the bits are addressable, multiple threads each have their
-stack, the application could leak the safe stack address to memory via
-``__builtin_frame_address``, bugs in the low-level runtime support etc.
-Safe stack leaks could be mitigated by writing and deploying a static binary
-analysis or a dynamic binary instrumentation based tool to find leaks.
-
-This approach doesn't prevent an attacker from "imbalancing" the safe
-stack by say having just one call, and doing two rets (thereby returning
-to an address that wasn't meant as a return address). This can be at least
-partially mitigated by deploying SafeStack alongside a forward control-flow
-integrity mechanism to ensure that calls are made using the correct calling
-convention. Clang does not currently implement a comprehensive forward
-control-flow integrity protection scheme; there exists one that protects
-:doc:`virtual calls <ControlFlowIntegrity>` but not non-virtual indirect calls.
 
 Compatibility
 -------------
@@ -83,21 +55,66 @@ work with SafeStack. One example is mark-and-sweep garbage collection
 implementations for C/C++ (e.g., Oilpan in chromium/blink), which must be
 changed to look for the live pointers on both safe and unsafe stacks.
 
-SafeStack supports linking together modules that are compiled with and without
-SafeStack, both statically and dynamically. One corner case that is not
-supported is using ``dlopen()`` to load a dynamic library that uses SafeStack into
-a program that is not compiled with SafeStack but uses threads.
+SafeStack supports linking statically modules that are compiled with and
+without SafeStack. An executable compiled with SafeStack can load dynamic
+libraries that are not compiled with SafeStack. At the moment, compiling
+dynamic libraries with SafeStack is not supported.
 
 Signal handlers that use ``sigaltstack()`` must not use the unsafe stack (see
 ``__attribute__((no_sanitize("safe-stack")))`` below).
 
 Programs that use APIs from ``ucontext.h`` are not supported yet.
 
+Security
+--------
+
+SafeStack protects return addresses, spilled registers and local variables that
+are always accessed in a safe way by separating them in a dedicated safe stack
+region. The safe stack is automatically protected against stack-based buffer
+overflows, since it is disjoint from the unsafe stack in memory, and it itself
+is always accessed in a safe way. In the current implementation, the safe stack
+is protected against arbitrary memory write vulnerabilities though
+randomization and information hiding: the safe stack is allocated at a random
+address and the instrumentation ensures that no pointers to the safe stack are
+ever stored outside of the safe stack itself (see limitations below).
+
+Known security limitations
+~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+A complete protection against control-flow hijack attacks requires combining
+SafeStack with another mechanism that enforces the integrity of code pointers
+that are stored on the heap or the unsafe stack, such as `CPI
+<http://dslab.epfl.ch/proj/cpi/>`_, or a forward-edge control flow integrity
+mechanism that enforces correct calling conventions at indirect call sites,
+such as `IFCC <http://research.google.com/pubs/archive/42808.pdf>`_ with arity
+checks. Clang has control-flow integrity protection scheme for `C++ virtual
+calls <ControlFlowIntegrity>`, but not non-virtual indirect calls. With
+SafeStack alone, an attacker can overwrite a function pointer on the heap or
+the unsafe stack and cause a program to call arbitrary location, which in turn
+might enable stack pivoting and return-oriented programming.
+
+In this implementation, SafeStack provides precise protection against
+stack-based buffer overflows, but probabilistic security guarantees against
+arbitrary memory write vulnerabilities. At the moment, these probabilistic
+guarantees rely on system-enforced ASLR and share its known security
+limitations.  The `CPI paper <http://dslab.epfl.ch/pubs/cpi.pdf>`_ describes
+two alternative stronger protection mechanisms, that rely on software fault
+isolation, or hardware segmentation (as available on x86-32 and some x86-64
+CPUs).
+
+The hiding of the safe stack pointer, required to prevent an attacker from
+breaking the probabilistic security guarantees through information leaks, may
+be not complete yet. System library functions such as ``setjmp``, exception
+handling mechanisms, intrinsics such as ``__buildin_frame_address``, or
+low-level bugs in runtime support could leak the stack pointer. In the future,
+such safe stack pointer leaks could be detected by a static binary analysis or
+a dynamic binary instrumentation based tools.
+
 Usage
 =====
 
-To enable SafeStack, just pass ``-fsanitize=safe-stack`` flag to both compile and link
-command lines.
+To enable SafeStack, just pass ``-fsanitize=safe-stack`` flag to both compile
+and link command lines.
 
 Supported Platforms
 -------------------
@@ -129,10 +146,11 @@ function, even if enabled globally (see ``-fsanitize=safe-stack`` flag). This
 attribute may be required for functions that make assumptions about the
 exact layout of their stack frames.
 
-Care should be taken when using this attribute. The return address is not
-protected against stack buffer overflows, and it is easier to leak the
-address of the safe stack to memory by taking the address of a local variable.
-
+All local variables in functions with this attribute will be stored on the safe
+stack. The safe stack remains unprotected against memory errors when accessing
+these variables, so extra care must be taken to manually ensure that all such
+accesses are safe. Furthermore, the addresses of such local variables should
+never be stored on the heap, as it would leak the location of the SafeStack.
 
 ``__builtin___get_unsafe_stack_ptr()``
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -149,10 +167,9 @@ current thread.
 Design
 ======
 
-Please refer to
-`http://dslab.epfl.ch/proj/cpi/ <http://dslab.epfl.ch/proj/cpi/>`_ for more
-information about the design of the SafeStack and its related technologies.
-
+Please refer to the `Code-Pointer Integirty <http://dslab.epfl.ch/proj/cpi/>`_
+project page for more information about the design of the SafeStack and its
+related technologies.
 
 Publications
 ------------
