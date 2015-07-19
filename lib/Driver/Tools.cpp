@@ -2400,6 +2400,10 @@ collectSanitizerRuntimes(const ToolChain &TC, const ArgList &Args,
   // Collect static runtimes.
   if (Args.hasArg(options::OPT_shared) ||
       (TC.getTriple().getEnvironment() == llvm::Triple::Android)) {
+    if (SanArgs.needsSafeStackRt()) {
+      // Link special version of safestack runtime for shared libraries
+      StaticRuntimes.push_back("safestack_shared");
+    }
     // Don't link static runtimes into DSOs or if compiling for Android.
     return;
   }
